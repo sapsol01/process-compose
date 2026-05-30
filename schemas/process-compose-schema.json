@@ -173,6 +173,9 @@
         },
         "timeout": {
           "type": "string"
+        },
+        "expose_control_tools": {
+          "type": "boolean"
         }
       },
       "type": "object"
@@ -206,6 +209,9 @@
     "ProcessConfig": {
       "properties": {
         "name": {
+          "type": "string"
+        },
+        "extends": {
           "type": "string"
         },
         "disabled": {

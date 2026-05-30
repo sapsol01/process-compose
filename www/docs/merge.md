@@ -188,6 +188,57 @@ With the same result.
 5. The `.env` file is loaded only from the `CWD`. Additional env files can be specified using `--env` (`-e`).
 6. If file `B` uses the `extends` keyword to extend file `A`, loading both with `process-compose up -f A -f B` will fail. Load only the last file in the chain with `process-compose -f B` instead.
 
+### Process Inheritance with `extends`
+
+While the top-level `extends` keyword inherits a whole file, a **process** can inherit the configuration of another process in the same project using a process-level `extends`. This is the equivalent of `docker-compose`'s `extends.service` and is useful for sharing a common base configuration between several processes:
+
+```yaml
+version: "0.5"
+
+processes:
+  base:
+    command: "echo base"
+    working_dir: "/srv/app"
+    environment:
+      - "FOO=bar"
+      - "SHARED=1"
+    availability:
+      restart: "always"
+
+  worker:
+    extends: "base"          # inherit command, working_dir, environment and availability
+    environment:
+      - "FOO=override"       # overrides the inherited FOO
+      - "EXTRA=2"            # adds a new variable (SHARED is inherited unchanged)
+```
+
+The resolved `worker` process is:
+
+```yaml
+worker:
+  command: "echo base"        # inherited
+  working_dir: "/srv/app"     # inherited
+  environment:
+    - "EXTRA=2"
+    - "FOO=override"
+    - "SHARED=1"
+  availability:
+    restart: "always"         # inherited
+```
+
+The merge follows the same rules used for [override files](#adding-and-overriding-configuration):
+
+- Scalar fields set on the extending process (e.g. `command`, `working_dir`) **override** the inherited value; fields the extending process leaves unset are **inherited**.
+- List fields such as `entrypoint` and `args` are **appended** (base first, then the extending process).
+- Maps such as `environment` and `depends_on` are **merged by key**, with the extending process winning on conflicts.
+
+**Notes**:
+
+1. The value of `extends` is the **name of another process** in the same merged configuration (the shorthand form, e.g. `extends: base`).
+2. Inheritance chains are supported (`c` extends `b`, which extends `a`); they are resolved before defaults and replica expansion.
+3. Extending an unknown process, a process extending itself, and circular chains all cause loading to fail.
+4. `extends` is resolved after all `-f` files are merged, so a process can extend a process defined in another file passed on the same command line.
+
 ## Controlling Process Enabled Status with `is_disabled`
 
 ### The Challenge: Overriding `disabled: false`

@@ -24,6 +24,7 @@ type (
 	EnvCmd        map[string]string
 	ProcessConfig struct {
 		Name                    string                 `yaml:",omitempty" json:"name,omitempty"`
+		Extends                 string                 `yaml:"extends,omitempty" json:"extends,omitempty"`
 		Disabled                bool                   `yaml:"disabled,omitempty" json:"disabled,omitempty"`
 		IsDaemon                bool                   `yaml:"is_daemon,omitempty" json:"isDaemon,omitempty"`
 		Command                 string                 `yaml:"command,omitempty" json:"command,omitempty"`
