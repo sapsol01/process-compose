@@ -1107,7 +1107,7 @@ func (p *ProjectRunner) getCurrentReplicaCount(name string) int {
 }
 
 func (p *ProjectRunner) scaleUpProcess(proc types.ProcessConfig, toAdd, scale, origScale int) {
-	for i := 0; i < toAdd; i++ {
+	for i := range toAdd {
 		var procFromConf types.ProcessConfig
 		err := json.Unmarshal([]byte(proc.OriginalConfig), &procFromConf)
 		if err != nil {
@@ -1269,13 +1269,7 @@ func (p *ProjectRunner) selectRunningProcessesNoDeps(procList []string) error {
 		return nil
 	}
 	for name, proc := range p.project.Processes {
-		found := false
-		for _, procName := range procList {
-			if proc.Name == procName {
-				found = true
-				break
-			}
-		}
+		found := slices.Contains(procList, proc.Name)
 		if !found {
 			proc.Disabled = true
 		} else {

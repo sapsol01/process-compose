@@ -19,7 +19,8 @@ func disableColor(t *testing.T) {
 	t.Cleanup(func() { color.NoColor = prev })
 }
 
-func ptrTime(t time.Time) *time.Time { return &t }
+//go:fix inline
+func ptrTime(t time.Time) *time.Time { return new(t) }
 
 func TestFormatDuration(t *testing.T) {
 	tests := []struct {
@@ -260,7 +261,7 @@ func TestRenderCriticalChainTree(t *testing.T) {
 	stateByName := map[string]*types.ProcessState{
 		"web":   mkReadyWithGap(400*time.Millisecond, 5*time.Second),
 		"app":   mkReadyWithGap(200*time.Millisecond, 3*time.Second),
-		"db":    mkReady(2 * time.Second),   // slower -> first dep of app
+		"db":    mkReady(2 * time.Second), // slower -> first dep of app
 		"cache": mkReady(500 * time.Millisecond),
 	}
 
@@ -354,7 +355,7 @@ func TestRenderCriticalChainSortsSiblingsSlowestFirst(t *testing.T) {
 
 	// Expected sibling order: b (3s) > c (2s) > a (1s). Using descending ready time.
 	depLines := []string{}
-	for _, l := range strings.Split(buf.String(), "\n") {
+	for l := range strings.SplitSeq(buf.String(), "\n") {
 		// tree lines rendered for direct children use "├─" or "└─".
 		if strings.HasPrefix(l, "├─") || strings.HasPrefix(l, "└─") {
 			depLines = append(depLines, l)

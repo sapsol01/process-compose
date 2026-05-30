@@ -22,7 +22,7 @@ func CompareVersions(current, latest string) int {
 		return 1
 	}
 
-	for i := 0; i < 3; i++ {
+	for i := range 3 {
 		if currentParts[i] < latestParts[i] {
 			return -1
 		}

@@ -8,6 +8,7 @@ import (
 	"io"
 	"os"
 	"runtime"
+	"slices"
 	"strconv"
 	"strings"
 	"sync"
@@ -54,9 +55,9 @@ type Process struct {
 	mtxStopFn            sync.Mutex
 	waitForStoppedCtx    context.Context
 	waitForStoppedFn     context.CancelFunc
-	procColor            func(a ...interface{}) string
-	noColor              func(a ...interface{}) string
-	redColor             func(a ...interface{}) string
+	procColor            func(a ...any) string
+	noColor              func(a ...any) string
+	redColor             func(a ...any) string
 	logBuffer            *pclog.ProcessLogBuffer
 	logger               pclog.PcLogger
 	command              command.Commander
@@ -322,10 +323,7 @@ func (p *Process) mergeExtraArgs() []string {
 }
 
 func (p *Process) getBackoff() time.Duration {
-	backoff := 1
-	if p.procConf.RestartPolicy.BackoffSeconds > backoff {
-		backoff = p.procConf.RestartPolicy.BackoffSeconds
-	}
+	backoff := max(p.procConf.RestartPolicy.BackoffSeconds, 1)
 	return time.Duration(backoff) * time.Second
 }
 
@@ -815,12 +813,7 @@ func (p *Process) isState(state string) bool {
 func (p *Process) isOneOfStates(states ...string) bool {
 	p.stateMtx.Lock()
 	defer p.stateMtx.Unlock()
-	for _, state := range states {
-		if p.procState.Status == state {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(states, p.procState.Status)
 }
 
 func (p *Process) setState(state string) {
@@ -975,7 +968,7 @@ func (p *Process) stopProbes() {
 	}
 }
 
-func (p *Process) onLivenessCheckEnd(_, isFatal bool, err string, details interface{}) {
+func (p *Process) onLivenessCheckEnd(_, isFatal bool, err string, details any) {
 	if isFatal {
 		p.logBuffer.Write("Error: liveness check fail - " + err)
 		p.notifyDaemonStopped()
@@ -998,7 +991,7 @@ func (p *Process) printDetails(details map[string]string, err, source string) {
 	}
 }
 
-func (p *Process) onReadinessCheckEnd(isOk, isFatal bool, err string, details interface{}) {
+func (p *Process) onReadinessCheckEnd(isOk, isFatal bool, err string, details any) {
 	if isFatal {
 		p.setProcHealth(types.ProcessHealthNotReady)
 		p.logBuffer.Write("Error: readiness check fail - " + err)

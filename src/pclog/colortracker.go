@@ -8,19 +8,19 @@ import (
 
 type ColorTracker struct {
 	clrMtx    sync.Mutex
-	colors    map[string]func(a ...interface{}) string
+	colors    map[string]func(a ...any) string
 	maxColors int
 }
 
 func NewColorTracker() *ColorTracker {
 	return &ColorTracker{
-		colors:    map[string]func(a ...interface{}) string{},
+		colors:    map[string]func(a ...any) string{},
 		maxColors: int(color.FgHiWhite) - int(color.FgHiBlack),
 	}
 }
 
 // GetColor returns the color for the given name.
-func (c *ColorTracker) GetColor(name string) func(a ...interface{}) string {
+func (c *ColorTracker) GetColor(name string) func(a ...any) string {
 	c.clrMtx.Lock()
 	defer c.clrMtx.Unlock()
 	if fn, ok := c.colors[name]; ok {
@@ -32,7 +32,7 @@ func (c *ColorTracker) GetColor(name string) func(a ...interface{}) string {
 }
 
 // Name2Color returns the color for the given name.
-func Name2Color(name string) func(a ...interface{}) string {
+func Name2Color(name string) func(a ...any) string {
 	maxColors := int(color.FgHiWhite) - int(color.FgHiBlack)
 	return color.New(color.FgHiBlack+color.Attribute(stringToInt(name)%maxColors), color.Bold).SprintFunc()
 }

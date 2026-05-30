@@ -9,7 +9,7 @@ func TestScrollHistory(t *testing.T) {
 	term.historySize = 10
 
 	// Fill screen
-	for i := 0; i < 5; i++ {
+	for range 5 {
 		term.Write([]byte("Line\n"))
 	}
 

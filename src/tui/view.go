@@ -486,10 +486,7 @@ func (pv *pcView) showGraphDialog() {
 	})
 	dialog.buildTree(graph, states)
 
-	width := dialog.GetWidth()
-	if width > 120 {
-		width = 120
-	}
+	width := min(dialog.GetWidth(), 120)
 	pv.showDialog(dialog.TreeView, width, 30)
 }
 

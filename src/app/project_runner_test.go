@@ -297,7 +297,7 @@ func TestProjectRunner_GetProjectName(t *testing.T) {
 
 func TestProjectRunner_EnvironmentExpansion(t *testing.T) {
 	testProcess := types.ProcessConfig{
-		Vars: map[string]interface{}{
+		Vars: map[string]any{
 			"PROCESS_VAR": "process_value",
 		},
 		Name:    "test-process",
@@ -309,7 +309,7 @@ func TestProjectRunner_EnvironmentExpansion(t *testing.T) {
 		},
 	}
 	p := &types.Project{
-		Vars: map[string]interface{}{
+		Vars: map[string]any{
 			"GLOBAL_VAR": "global_value",
 		},
 		Processes: map[string]types.ProcessConfig{

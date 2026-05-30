@@ -2,6 +2,7 @@ package tui
 
 import (
 	"fmt"
+	"maps"
 	"os"
 	"slices"
 	"strconv"
@@ -128,10 +129,7 @@ func (cp *commandPalette) height() int {
 		rowsPerItem = 1
 	}
 	// item rows + input(1) + footer(1) + borders(2)
-	h := itemCount*rowsPerItem + 4
-	if h > 18 {
-		h = 18
-	}
+	h := min(itemCount*rowsPerItem+4, 18)
 	if h < 8 {
 		h = 8
 	}
@@ -403,9 +401,7 @@ func (cp *commandPalette) goBackToStep() {
 	}
 	step := cp.selectedCmd.Steps[cp.stepIndex]
 	cp.toggleInputs = make(map[string]bool)
-	for k, v := range step.Toggles {
-		cp.toggleInputs[k] = v
-	}
+	maps.Copy(cp.toggleInputs, step.Toggles)
 	cp.transitionToTextInput(step.Label, step.Footer)
 	if len(cp.toggleInputs) > 0 {
 		cp.updateToggleFooter()

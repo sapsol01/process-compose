@@ -58,7 +58,7 @@ func handleOutputNew(pipe io.ReadCloser, handler func(message string), done chan
 func generateRegularLines(count int, lineLength int) string {
 	var builder strings.Builder
 	line := strings.Repeat("a", lineLength)
-	for i := 0; i < count; i++ {
+	for range count {
 		builder.WriteString(line)
 		builder.WriteByte('\n')
 	}
@@ -67,7 +67,7 @@ func generateRegularLines(count int, lineLength int) string {
 
 func generateProgressBarOutput(count int) string {
 	var builder strings.Builder
-	for i := 0; i < count; i++ {
+	for i := range count {
 		progress := strings.Repeat("=", i%50)
 		spaces := strings.Repeat(" ", 50-(i%50))
 		builder.WriteString("Progress: [" + progress + spaces + "] " + string(rune('0'+(i%10))))
@@ -82,7 +82,7 @@ func generateProgressBarOutput(count int) string {
 
 func generateMixedOutput(lines int) string {
 	var builder strings.Builder
-	for i := 0; i < lines; i++ {
+	for i := range lines {
 		if i%10 == 0 {
 			// Every 10th line is a progress update with \r
 			progress := strings.Repeat("=", (i/10)%20)

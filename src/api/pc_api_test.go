@@ -63,9 +63,9 @@ func performRequest(r *gin.Engine, method, path string, body string) *httptest.R
 	return w
 }
 
-func parseJSON(t *testing.T, w *httptest.ResponseRecorder) map[string]interface{} {
+func parseJSON(t *testing.T, w *httptest.ResponseRecorder) map[string]any {
 	t.Helper()
-	var result map[string]interface{}
+	var result map[string]any
 	if err := json.Unmarshal(w.Body.Bytes(), &result); err != nil {
 		t.Fatalf("failed to parse response JSON: %v\nbody: %s", err, w.Body.String())
 	}
@@ -300,7 +300,7 @@ func TestGetProcessLogs_Success(t *testing.T) {
 		t.Fatalf("expected 200, got %d", w.Code)
 	}
 	result := parseJSON(t, w)
-	logs, ok := result["logs"].([]interface{})
+	logs, ok := result["logs"].([]any)
 	if !ok || len(logs) != 2 {
 		t.Fatalf("expected 2 log lines, got %v", result["logs"])
 	}

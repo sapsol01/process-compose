@@ -66,8 +66,8 @@ func verifyChecksum(archiveData []byte, archiveName string, checksumsData []byte
 	hash := sha256.Sum256(archiveData)
 	actualSum := hex.EncodeToString(hash[:])
 
-	lines := strings.Split(string(checksumsData), "\n")
-	for _, line := range lines {
+	lines := strings.SplitSeq(string(checksumsData), "\n")
+	for line := range lines {
 		fields := strings.Fields(line)
 		if len(fields) == 2 && fields[1] == archiveName {
 			if fields[0] == actualSum {

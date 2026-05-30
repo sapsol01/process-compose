@@ -242,10 +242,7 @@ func (s *Server) handleProcessLogs(_ context.Context, req mcp.CallToolRequest) (
 	if tail <= 0 {
 		tail = 100
 	}
-	offset := req.GetInt("offset_from_end", 0)
-	if offset < 0 {
-		offset = 0
-	}
+	offset := max(req.GetInt("offset_from_end", 0), 0)
 	lines, err := s.runner.GetProcessLog(name, offset, tail)
 	if err != nil {
 		return mcp.NewToolResultErrorf("failed to get logs for %s: %v", name, err), nil

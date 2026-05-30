@@ -16,7 +16,7 @@ type execChecker struct {
 	shellConfig command.ShellConfig
 }
 
-func (c *execChecker) Status() (interface{}, error) {
+func (c *execChecker) Status() (any, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(c.timeout)*time.Second)
 	defer cancel()
 

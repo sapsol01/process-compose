@@ -711,7 +711,7 @@ func TestSystem_TestReadyLine(t *testing.T) {
 		return
 	}
 	// Wait for proc2 to become running (it waits for proc1 ready log line)
-	for i := 0; i < 50; i++ {
+	for range 50 {
 		proc = runner.getRunningProcess(proc2)
 		if proc != nil && proc.getStatusName() == types.ProcessStateRunning {
 			break
@@ -1017,7 +1017,7 @@ func TestSystem_TestProcShutDownWithConfiguredTimeOut(t *testing.T) {
 		}()
 
 		var proc *Process
-		for i := 0; i < 10; i++ {
+		for range 10 {
 			time.Sleep(100 * time.Millisecond)
 			proc = runner.getRunningProcess(ignoresSigTerm)
 			if proc != nil {
@@ -1069,7 +1069,7 @@ func TestSystem_TestProcShutDownWithConfiguredTimeOut(t *testing.T) {
 			}
 		}()
 		var proc *Process
-		for i := 0; i < 10; i++ {
+		for range 10 {
 			time.Sleep(100 * time.Millisecond)
 			proc = runner.getRunningProcess(ignoresSigTerm)
 			if proc != nil {
@@ -1117,7 +1117,7 @@ func TestSystem_TestRestartingProcessShutDown(t *testing.T) {
 		}
 	}()
 	var proc *Process
-	for i := 0; i < 50; i++ {
+	for range 50 {
 		proc = p.getRunningProcess(proc1)
 		if proc != nil && proc.getStatusName() == types.ProcessStateRestarting {
 			break
@@ -1571,7 +1571,7 @@ func TestSystem_TestTerminatingWithOrphanedChildHoldingPipe(t *testing.T) {
 
 	// Wait for the process to be running (poll via mutex-protected method to avoid race).
 	var proc *Process
-	for i := 0; i < 50; i++ {
+	for range 50 {
 		time.Sleep(100 * time.Millisecond)
 		proc = runner.getRunningProcess(testProcess)
 		if proc != nil {

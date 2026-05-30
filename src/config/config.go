@@ -6,6 +6,7 @@ import (
 	"os/user"
 	"path/filepath"
 	"runtime/debug"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -328,10 +329,8 @@ func mode() string {
 
 func isClient() bool {
 	for _, proc := range os.Args {
-		for _, cmd := range clientCommands {
-			if proc == cmd {
-				return true
-			}
+		if slices.Contains(clientCommands, proc) {
+			return true
 		}
 	}
 	return false

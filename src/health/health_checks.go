@@ -20,14 +20,14 @@ const (
 type Prober struct {
 	probe          Probe
 	name           string
-	onCheckEndFunc func(bool, bool, string, interface{})
+	onCheckEndFunc func(bool, bool, string, any)
 	hc             *health.Health
 	stopped        atomic.Bool
 	env            []string
 	shellConfig    command.ShellConfig
 }
 
-func New(name string, probe Probe, env []string, shellConfig command.ShellConfig, onCheckEnd func(bool, bool, string, interface{})) (*Prober, error) {
+func New(name string, probe Probe, env []string, shellConfig command.ShellConfig, onCheckEnd func(bool, bool, string, any)) (*Prober, error) {
 	probe.ValidateAndSetDefaults()
 	p := &Prober{
 		probe:          probe,

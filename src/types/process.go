@@ -23,47 +23,47 @@ type (
 	Environment   []string
 	EnvCmd        map[string]string
 	ProcessConfig struct {
-		Name                    string                 `yaml:",omitempty" json:"name,omitempty"`
-		Extends                 string                 `yaml:"extends,omitempty" json:"extends,omitempty"`
-		Disabled                bool                   `yaml:"disabled,omitempty" json:"disabled,omitempty"`
-		IsDaemon                bool                   `yaml:"is_daemon,omitempty" json:"isDaemon,omitempty"`
-		Command                 string                 `yaml:"command,omitempty" json:"command,omitempty"`
-		Entrypoint              []string               `yaml:"entrypoint,omitempty" json:"entrypoint,omitempty"`
-		LogLocation             string                 `yaml:"log_location,omitempty" json:"logLocation,omitempty"`
-		LoggerConfig            *LoggerConfig          `yaml:"log_configuration,omitempty" json:"loggerConfig,omitempty"`
-		Environment             Environment            `yaml:"environment,omitempty" json:"environment,omitempty"`
-		EnvFile                 string                 `yaml:"env_file,omitempty" json:"envFile,omitempty"`
-		RestartPolicy           RestartPolicyConfig    `yaml:"availability,omitempty" json:"restartPolicy,omitempty"`
-		DependsOn               DependsOnConfig        `yaml:"depends_on,omitempty" json:"dependsOn,omitempty"`
-		LivenessProbe           *health.Probe          `yaml:"liveness_probe,omitempty" json:"livenessProbe,omitempty"`
-		ReadinessProbe          *health.Probe          `yaml:"readiness_probe,omitempty" json:"readinessProbe,omitempty"`
-		ReadyLogLine            string                 `yaml:"ready_log_line,omitempty" json:"readyLogLine,omitempty"`
-		ShutDownParams          ShutDownParams         `yaml:"shutdown,omitempty" json:"shutDownParams,omitempty"`
-		DisableAnsiColors       bool                   `yaml:"disable_ansi_colors,omitempty" json:"disableAnsiColors,omitempty"`
-		WorkingDir              string                 `yaml:"working_dir,omitempty" json:"workingDir,omitempty"`
-		Namespace               string                 `yaml:"namespace,omitempty" json:"namespace,omitempty"`
-		Replicas                int                    `yaml:"replicas,omitempty" json:"replicas,omitempty"`
-		Extensions              map[string]interface{} `yaml:",inline" json:"extensions,omitempty"`
-		Description             string                 `yaml:"description,omitempty" json:"description,omitempty"`
-		Vars                    Vars                   `yaml:"vars,omitempty" json:"vars,omitempty"`
-		IsForeground            bool                   `yaml:"is_foreground,omitempty" json:"isForeground,omitempty"`
-		IsTty                   bool                   `yaml:"is_tty,omitempty" json:"isTty,omitempty"`
-		IsElevated              bool                   `yaml:"is_elevated,omitempty" json:"isElevated,omitempty"`
-		IsInteractive           bool                   `yaml:"is_interactive,omitempty" json:"isInteractive,omitempty"`
-		LaunchTimeout           int                    `yaml:"launch_timeout_seconds,omitempty" json:"launchTimeout,omitempty"`
-		IsDisabled              string                 `yaml:"is_disabled,omitempty" json:"isDisabled,omitempty"`
-		DisableDotEnv           bool                   `yaml:"is_dotenv_disabled,omitempty" json:"disableDotEnv,omitempty"`
-		OriginalConfig          string                 `yaml:"original_config,omitempty" json:"originalConfig,omitempty"`
-		ReplicaNum              int                    `yaml:"replica_num,omitempty" json:"replicaNum,omitempty"`
-		ReplicaName             string                 `yaml:"replica_name,omitempty" json:"replicaName,omitempty"`
-		Executable              string                 `yaml:"executable,omitempty" json:"executable,omitempty"`
-		Args                    []string               `yaml:"args,omitempty" json:"args,omitempty"`
-		Schedule                *ScheduleConfig        `yaml:"schedule,omitempty" json:"schedule,omitempty"`
-		MCP                     *MCPProcessConfig      `yaml:"mcp,omitempty" json:"mcp,omitempty"`
-		TruncateLog             bool                   `yaml:"truncate_log,omitempty" json:"truncateLog,omitempty"`
-		DisableCommandRendering bool                   `yaml:"is_template_disabled,omitempty" json:"disableCommandRendering,omitempty"`
-		MonitorFor              MonitorFor             `yaml:"monitor_for,omitempty" json:"monitorFor,omitempty" jsonschema:"type=string,enum=none,enum=activity,enum=silence"`
-		MonitorSilenceThreshold time.Duration          `yaml:"monitor_silence_threshold,omitempty" json:"monitorSilenceThreshold,omitempty"`
+		Name                    string              `yaml:",omitempty" json:"name,omitempty"`
+		Extends                 string              `yaml:"extends,omitempty" json:"extends,omitempty"`
+		Disabled                bool                `yaml:"disabled,omitempty" json:"disabled,omitempty"`
+		IsDaemon                bool                `yaml:"is_daemon,omitempty" json:"isDaemon,omitempty"`
+		Command                 string              `yaml:"command,omitempty" json:"command,omitempty"`
+		Entrypoint              []string            `yaml:"entrypoint,omitempty" json:"entrypoint,omitempty"`
+		LogLocation             string              `yaml:"log_location,omitempty" json:"logLocation,omitempty"`
+		LoggerConfig            *LoggerConfig       `yaml:"log_configuration,omitempty" json:"loggerConfig,omitempty"`
+		Environment             Environment         `yaml:"environment,omitempty" json:"environment,omitempty"`
+		EnvFile                 string              `yaml:"env_file,omitempty" json:"envFile,omitempty"`
+		RestartPolicy           RestartPolicyConfig `yaml:"availability,omitempty" json:"restartPolicy"`
+		DependsOn               DependsOnConfig     `yaml:"depends_on,omitempty" json:"dependsOn,omitempty"`
+		LivenessProbe           *health.Probe       `yaml:"liveness_probe,omitempty" json:"livenessProbe,omitempty"`
+		ReadinessProbe          *health.Probe       `yaml:"readiness_probe,omitempty" json:"readinessProbe,omitempty"`
+		ReadyLogLine            string              `yaml:"ready_log_line,omitempty" json:"readyLogLine,omitempty"`
+		ShutDownParams          ShutDownParams      `yaml:"shutdown,omitempty" json:"shutDownParams"`
+		DisableAnsiColors       bool                `yaml:"disable_ansi_colors,omitempty" json:"disableAnsiColors,omitempty"`
+		WorkingDir              string              `yaml:"working_dir,omitempty" json:"workingDir,omitempty"`
+		Namespace               string              `yaml:"namespace,omitempty" json:"namespace,omitempty"`
+		Replicas                int                 `yaml:"replicas,omitempty" json:"replicas,omitempty"`
+		Extensions              map[string]any      `yaml:",inline" json:"extensions,omitempty"`
+		Description             string              `yaml:"description,omitempty" json:"description,omitempty"`
+		Vars                    Vars                `yaml:"vars,omitempty" json:"vars,omitempty"`
+		IsForeground            bool                `yaml:"is_foreground,omitempty" json:"isForeground,omitempty"`
+		IsTty                   bool                `yaml:"is_tty,omitempty" json:"isTty,omitempty"`
+		IsElevated              bool                `yaml:"is_elevated,omitempty" json:"isElevated,omitempty"`
+		IsInteractive           bool                `yaml:"is_interactive,omitempty" json:"isInteractive,omitempty"`
+		LaunchTimeout           int                 `yaml:"launch_timeout_seconds,omitempty" json:"launchTimeout,omitempty"`
+		IsDisabled              string              `yaml:"is_disabled,omitempty" json:"isDisabled,omitempty"`
+		DisableDotEnv           bool                `yaml:"is_dotenv_disabled,omitempty" json:"disableDotEnv,omitempty"`
+		OriginalConfig          string              `yaml:"original_config,omitempty" json:"originalConfig,omitempty"`
+		ReplicaNum              int                 `yaml:"replica_num,omitempty" json:"replicaNum,omitempty"`
+		ReplicaName             string              `yaml:"replica_name,omitempty" json:"replicaName,omitempty"`
+		Executable              string              `yaml:"executable,omitempty" json:"executable,omitempty"`
+		Args                    []string            `yaml:"args,omitempty" json:"args,omitempty"`
+		Schedule                *ScheduleConfig     `yaml:"schedule,omitempty" json:"schedule,omitempty"`
+		MCP                     *MCPProcessConfig   `yaml:"mcp,omitempty" json:"mcp,omitempty"`
+		TruncateLog             bool                `yaml:"truncate_log,omitempty" json:"truncateLog,omitempty"`
+		DisableCommandRendering bool                `yaml:"is_template_disabled,omitempty" json:"disableCommandRendering,omitempty"`
+		MonitorFor              MonitorFor          `yaml:"monitor_for,omitempty" json:"monitorFor,omitempty" jsonschema:"type=string,enum=none,enum=activity,enum=silence"`
+		MonitorSilenceThreshold time.Duration       `yaml:"monitor_silence_threshold,omitempty" json:"monitorSilenceThreshold,omitempty"`
 	}
 )
 
@@ -189,7 +189,7 @@ func (p *ProcessConfig) ValidateProcessConfig() error {
 	return nil
 }
 
-func compareStructs(a, b interface{}) []string {
+func compareStructs(a, b any) []string {
 	var differences []string
 	aValue := reflect.ValueOf(a)
 	bValue := reflect.ValueOf(b)
@@ -386,7 +386,7 @@ func (p *RestartPolicy) UnmarshalYAML(node *yaml.Node) error {
 	return nil
 }
 
-func (p RestartPolicy) MarshalYAML() (interface{}, error) {
+func (p RestartPolicy) MarshalYAML() (any, error) {
 	switch p {
 	case RestartPolicyNo:
 		return "no", nil
@@ -493,7 +493,7 @@ func (c *ProcessCondition) UnmarshalYAML(node *yaml.Node) error {
 	return nil
 }
 
-func (c ProcessCondition) MarshalYAML() (interface{}, error) {
+func (c ProcessCondition) MarshalYAML() (any, error) {
 	switch c {
 	case ProcessConditionCompleted:
 		return "process_completed", nil
@@ -537,7 +537,7 @@ func (m *MonitorFor) UnmarshalYAML(node *yaml.Node) error {
 	return nil
 }
 
-func (m MonitorFor) MarshalYAML() (interface{}, error) {
+func (m MonitorFor) MarshalYAML() (any, error) {
 	switch m {
 	case MonitorForNone:
 		return "none", nil
@@ -554,8 +554,8 @@ func (m MonitorFor) MarshalYAML() (interface{}, error) {
 type DependsOnConfig map[string]ProcessDependency
 
 type ProcessDependency struct {
-	Condition  ProcessCondition       `yaml:",omitempty" json:"condition,omitempty" jsonschema:"type=string,enum=process_started,enum=process_healthy,enum=process_completed,enum=process_completed_successfully,enum=process_log_ready"`
-	Extensions map[string]interface{} `yaml:",inline" json:"extensions,omitempty"`
+	Condition  ProcessCondition `yaml:",omitempty" json:"condition,omitempty" jsonschema:"type=string,enum=process_started,enum=process_healthy,enum=process_completed,enum=process_completed_successfully,enum=process_log_ready"`
+	Extensions map[string]any   `yaml:",inline" json:"extensions,omitempty"`
 }
 
 const (
