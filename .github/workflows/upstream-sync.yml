@@ -1,0 +1,99 @@
+# Fork 동기화: upstream(F1bonacc1/process-compose) 변경을 2주 주기로 가져와 PR 생성.
+#
+# 동작
+#   - 매월 1일/15일(약 2주 간격) 또는 수동 실행
+#   - upstream/main 에 새 커밋이 없으면 PR을 만들지 않고 종료 → 후속 CI 스킵
+#   - 새 커밋이 있으면 upstream-sync 브랜치를 갱신하고 main 으로 PR 생성/갱신
+#   - PR 의 pull_request 이벤트로 pre-merge-review 가드가 자동 검토
+#   - auto-merge 활성화 → 가드(필수 체크) 통과 시 자동 병합
+#
+# 전제 (저장소 설정에서 직접 구성 필요)
+#   - Secret: SYNC_PAT (fine-grained PAT, contents:write + pull-requests:write)
+#       * 없으면 GITHUB_TOKEN 으로 폴백되지만, 그 경우 PR 이벤트가 pre-merge-review
+#         가드를 트리거하지 못합니다(가드 검토가 자동으로 돌지 않음).
+#   - Settings → General → "Allow auto-merge" 활성화
+#   - main 브랜치 보호 규칙에 "pre-merge-review" 를 required status check 로 지정
+#       * 그래야 auto-merge 가 가드 통과 후에만 병합합니다.
+
+name: upstream-sync
+
+on:
+  schedule:
+    - cron: '0 7 1,15 * *'   # 매월 1일·15일 07:00 UTC (약 2주 주기)
+  workflow_dispatch: {}
+
+concurrency:
+  group: upstream-sync
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+env:
+  UPSTREAM_REPO: F1bonacc1/process-compose
+  UPSTREAM_BRANCH: main
+  TARGET_BRANCH: main
+  SYNC_BRANCH: upstream-sync
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (full history)
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4.3.1
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.SYNC_PAT || secrets.GITHUB_TOKEN }}
+
+      - name: Fetch upstream
+        run: |
+          git remote add upstream "https://github.com/${UPSTREAM_REPO}.git"
+          git fetch upstream "${UPSTREAM_BRANCH}"
+
+      - name: Check for new upstream commits
+        id: check
+        run: |
+          BEHIND=$(git rev-list --count "HEAD..upstream/${UPSTREAM_BRANCH}")
+          echo "behind=$BEHIND" >> "$GITHUB_OUTPUT"
+          if [ "$BEHIND" -eq 0 ]; then
+            echo "✅ upstream 변경 없음 — PR 생략, CI 스킵."
+          else
+            echo "🔄 upstream 신규 커밋 ${BEHIND}개 — 동기화 PR 진행."
+          fi
+
+      - name: Update sync branch
+        if: steps.check.outputs.behind != '0'
+        run: |
+          # upstream/main 의 tip 을 우리 저장소의 sync 브랜치로 강제 반영.
+          # main 으로의 PR diff 는 upstream 신규 변경분만 표시됨.
+          git push --force origin "refs/remotes/upstream/${UPSTREAM_BRANCH}:refs/heads/${SYNC_BRANCH}"
+
+      - name: Create or update PR (+ enable auto-merge)
+        if: steps.check.outputs.behind != '0'
+        env:
+          GH_TOKEN: ${{ secrets.SYNC_PAT || secrets.GITHUB_TOKEN }}
+          BEHIND: ${{ steps.check.outputs.behind }}
+        run: |
+          TITLE="chore: sync upstream ${UPSTREAM_REPO}@${UPSTREAM_BRANCH} (${BEHIND} commit(s))"
+          BODY=$(printf '%s\n' \
+            "자동 생성된 upstream 동기화 PR." \
+            "" \
+            "- upstream: \`${UPSTREAM_REPO}@${UPSTREAM_BRANCH}\`" \
+            "- 신규 커밋: ${BEHIND}개" \
+            "" \
+            "pre-merge-review 가드 통과 시 auto-merge 됩니다. 충돌이 있으면 수동 해결이 필요합니다.")
+
+          EXISTING=$(gh pr list --base "${TARGET_BRANCH}" --head "${SYNC_BRANCH}" --state open --json number --jq '.[0].number')
+          if [ -n "$EXISTING" ]; then
+            echo "기존 PR #${EXISTING} 갱신."
+            gh pr edit "$EXISTING" --title "$TITLE" --body "$BODY"
+            PR_NUM="$EXISTING"
+          else
+            gh pr create --base "${TARGET_BRANCH}" --head "${SYNC_BRANCH}" --title "$TITLE" --body "$BODY"
+            PR_NUM=$(gh pr list --base "${TARGET_BRANCH}" --head "${SYNC_BRANCH}" --state open --json number --jq '.[0].number')
+          fi
+
+          # 가드(필수 체크) 통과 후 자동 병합. branch protection + Allow auto-merge 필요.
+          gh pr merge "$PR_NUM" --auto --merge || \
+            echo "⚠️ auto-merge 활성화 실패 — 'Allow auto-merge' 및 branch protection 설정을 확인하세요."
