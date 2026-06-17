@@ -1,0 +1,58 @@
+# 공급망 보안 점검: 의존성의 알려진 취약점(govulncheck) + 모듈 무결성/위생 검사.
+#
+#   ① go mod verify : 다운로드된 모듈이 go.sum 의 해시와 일치하는지 검증
+#                      → 레지스트리/캐시 변조 차단                         [하드 게이트]
+#   ② govulncheck   : go.mod/go.sum 을 Go OSV DB 에 조회하고 실제 호출
+#                      경로를 분석해 알려진 취약점(CVE) 탐지                [하드 게이트]
+#   ③ go mod tidy   : tidy 후 go.mod/go.sum 에 diff 가 생기면 예기치 않은
+#                      의존성 추가/변경 신호 → 로그로 알림                  [자문]
+#
+# ①②는 발견 시 잡이 실패하여 병합 게이트로 동작합니다.
+# ③ 은 휴리스틱(예: 일시적 프록시 차이)으로 오탐이 있을 수 있어 자문으로 둡니다 —
+#   발견 항목은 로그에 남기되 빌드를 막지 않으며, 최종 판단은 pre-merge-review(AI 가드)와
+#   사람 검토에 맡깁니다. 하드 게이트로 바꾸려면 ③ 에서 `git diff --exit-code` 를 쓰세요.
+# 액션과 도구는 supply-chain 안전을 위해 SHA / 버전으로 핀합니다.
+
+name: supply-chain-audit
+
+on:
+  push:
+    branches: [main]
+  pull_request: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: supply-chain-audit-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955  # v4.3.0
+
+      - name: Set up Go
+        uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5  # v5.5.0
+        with:
+          go-version: 1.26
+
+      - name: Verify module integrity (go.sum hashes)
+        run: go mod verify
+
+      - name: Audit known vulnerabilities (Go OSV)
+        run: |
+          go install golang.org/x/vuln/cmd/govulncheck@v1.1.4  # pinned
+          "$(go env GOPATH)/bin/govulncheck" ./...
+
+      - name: Check module hygiene (go mod tidy, advisory)
+        continue-on-error: true   # 자문: 발견 항목은 로그에 남기되 빌드는 막지 않음
+        run: |
+          go mod tidy
+          git diff --stat -- go.mod go.sum
+          if ! git diff --quiet -- go.mod go.sum; then
+            echo "::warning::go mod tidy 후 go.mod/go.sum 에 변경이 감지됨 — 의존성 정리 상태를 확인하세요."
+          fi
