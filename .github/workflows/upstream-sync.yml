@@ -73,6 +73,9 @@ jobs:
         if: steps.check.outputs.behind != '0'
         env:
           GH_TOKEN: ${{ secrets.SYNC_PAT || secrets.GITHUB_TOKEN }}
+          # fork 에서 gh 의 기본 대상은 upstream 부모 저장소입니다. PR 은 항상
+          # 이 fork(자기 저장소) 안에서 만들어야 하므로 GH_REPO 를 고정합니다.
+          GH_REPO: ${{ github.repository }}
           BEHIND: ${{ steps.check.outputs.behind }}
         run: |
           TITLE="chore: sync upstream ${UPSTREAM_REPO}@${UPSTREAM_BRANCH} (${BEHIND} commit(s))"
