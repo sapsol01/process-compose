@@ -66,10 +66,7 @@ func (pv *pcView) isCommandModeDisabled() bool {
 
 func (pv *pcView) autoAdjustProcTableHeight() {
 	maxProcHeight := pv.getMaxProcHeight()
-	procTblHeight := pv.procTable.GetRowCount() + 1
-	if procTblHeight > maxProcHeight {
-		procTblHeight = maxProcHeight
-	}
+	procTblHeight := min(pv.procTable.GetRowCount()+1, maxProcHeight)
 	rows := []int{}
 	if !pv.isFullScreen {
 		//stat table

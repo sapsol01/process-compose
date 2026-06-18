@@ -4,7 +4,7 @@ let pkg = "github.com/f1bonacc1/process-compose/src/config";
 in
 (buildGoModule.override { go = pkgs.go_1_26; }) rec {
   pname = "process-compose";
-  version = "1.110.0";
+  version = "1.116.0";
   env.CGO_ENABLED = 0;
 
   src = lib.cleanSource ./.;
@@ -18,7 +18,7 @@ in
 
   nativeBuildInputs = [ installShellFiles ];
 
-  vendorHash = "sha256-dNSf2CJQRJAZiIimriYqlqwcaD1NQg7a1qFPMzEsrgw=";
+  vendorHash = "sha256-50N4IsSnUh3qmqqw+WACx2j0fMhLZKZdYK+7HAszxAY=";
   #vendorHash = lib.fakeHash;
 
   postInstall = ''

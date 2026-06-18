@@ -441,10 +441,7 @@ func (t *AnsiTerminal) handleCursorMovement(command byte, params []int) {
 		t.latentWrap = false
 
 	case 'G': // Cursor Horizontal Absolute (CHA)
-		t.cursorX = n - 1
-		if t.cursorX < 0 {
-			t.cursorX = 0
-		}
+		t.cursorX = max(n-1, 0)
 		if t.cursorX >= t.width {
 			t.cursorX = t.width - 1
 		}
@@ -476,10 +473,7 @@ func (t *AnsiTerminal) handleCursorMovement(command byte, params []int) {
 		}
 
 	case 'd': // Line Position Absolute (VPA)
-		t.cursorY = n - 1
-		if t.cursorY < 0 {
-			t.cursorY = 0
-		}
+		t.cursorY = max(n-1, 0)
 		if t.cursorY >= t.height {
 			t.cursorY = t.height - 1
 		}
@@ -648,7 +642,7 @@ func (t *AnsiTerminal) insertLine(n int) {
 		return
 	}
 
-	for i := 0; i < n; i++ {
+	for range n {
 		// Move lines down from cursor to bottom of region
 		for y := t.scrollBottom; y > t.cursorY; y-- {
 			copy(t.cells[y], t.cells[y-1])
@@ -666,7 +660,7 @@ func (t *AnsiTerminal) deleteLine(n int) {
 		return
 	}
 
-	for i := 0; i < n; i++ {
+	for range n {
 		// Move lines up from cursor+1 to bottom of region
 		for y := t.cursorY; y < t.scrollBottom; y++ {
 			copy(t.cells[y], t.cells[y+1])
@@ -892,10 +886,7 @@ func (t *AnsiTerminal) deleteChar(n int) {
 	}
 
 	// Clear the space at the end
-	startClear := t.width - n
-	if startClear < t.cursorX {
-		startClear = t.cursorX
-	}
+	startClear := max(t.width-n, t.cursorX)
 	for i := startClear; i < t.width; i++ {
 		t.cells[t.cursorY][i] = Cell{Char: ' ', Style: t.currentStyle}
 	}

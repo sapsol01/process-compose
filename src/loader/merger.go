@@ -15,14 +15,14 @@ type specials struct {
 
 var processSpecials = &specials{
 	m: map[reflect.Type]func(dst, src reflect.Value) error{
-		reflect.TypeOf(types.Environment{}): mergeSlice(toEnvVarMap, toEnvVarSlice),
+		reflect.TypeFor[types.Environment](): mergeSlice(toEnvVarMap, toEnvVarSlice),
 	},
 }
 
 var projectSpecials = &specials{
 	m: map[reflect.Type]func(dst, src reflect.Value) error{
-		reflect.TypeOf(types.Environment{}): mergeSlice(toEnvVarMap, toEnvVarSlice),
-		reflect.TypeOf(types.Processes{}):   specialProcessesMerge,
+		reflect.TypeFor[types.Environment](): mergeSlice(toEnvVarMap, toEnvVarSlice),
+		reflect.TypeFor[types.Processes]():   specialProcessesMerge,
 	},
 }
 
@@ -33,8 +33,8 @@ func (s *specials) Transformer(t reflect.Type) func(dst, src reflect.Value) erro
 	return nil
 }
 
-type toMapFn func(s interface{}) (map[interface{}]interface{}, error)
-type writeValueFromMapFn func(reflect.Value, map[interface{}]interface{}) error
+type toMapFn func(s any) (map[any]any, error)
+type writeValueFromMapFn func(reflect.Value, map[any]any) error
 
 func mergeSlice(toMap toMapFn, writeValue writeValueFromMapFn) func(dst, src reflect.Value) error {
 	return func(dst, src reflect.Value) error {
@@ -53,7 +53,7 @@ func mergeSlice(toMap toMapFn, writeValue writeValueFromMapFn) func(dst, src ref
 	}
 }
 
-func sliceToMap(toMap toMapFn, v reflect.Value) (map[interface{}]interface{}, error) {
+func sliceToMap(toMap toMapFn, v reflect.Value) (map[any]any, error) {
 	// check if valid
 	if !v.IsValid() {
 		return nil, fmt.Errorf("invalid value : %+v", v)
@@ -61,12 +61,12 @@ func sliceToMap(toMap toMapFn, v reflect.Value) (map[interface{}]interface{}, er
 	return toMap(v.Interface())
 }
 
-func toEnvVarMap(s interface{}) (map[interface{}]interface{}, error) {
+func toEnvVarMap(s any) (map[any]any, error) {
 	envVars, ok := s.(types.Environment)
 	if !ok {
 		return nil, fmt.Errorf("not an Environment slice: %v", s)
 	}
-	m := map[interface{}]interface{}{}
+	m := map[any]any{}
 	for _, v := range envVars {
 		kv := strings.Split(v, "=")
 		if len(kv) == 2 {
@@ -76,7 +76,7 @@ func toEnvVarMap(s interface{}) (map[interface{}]interface{}, error) {
 	return m, nil
 }
 
-func toEnvVarSlice(dst reflect.Value, m map[interface{}]interface{}) error {
+func toEnvVarSlice(dst reflect.Value, m map[any]any) error {
 	var s types.Environment
 	for k, v := range m {
 		kv := fmt.Sprintf("%s=%s", k.(string), v.(string))

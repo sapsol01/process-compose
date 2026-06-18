@@ -123,10 +123,10 @@ func TestBroadcaster_SnapshotAtomicWithSubscribe(t *testing.T) {
 
 	var wg sync.WaitGroup
 	wg.Add(publishers)
-	for i := 0; i < publishers; i++ {
+	for range publishers {
 		go func() {
 			defer wg.Done()
-			for j := 0; j < events; j++ {
+			for range events {
 				n := counter.Add(1)
 				b.Publish(types.ProcessStateEvent{
 					State: makeState("p1", strconv.FormatInt(n, 10)),
@@ -166,10 +166,10 @@ func TestBroadcaster_ConcurrentPublish(t *testing.T) {
 
 	var wg sync.WaitGroup
 	wg.Add(publishers)
-	for p := 0; p < publishers; p++ {
+	for range publishers {
 		go func() {
 			defer wg.Done()
-			for i := 0; i < eventsPer; i++ {
+			for range eventsPer {
 				b.Publish(types.ProcessStateEvent{
 					State: makeState("p", types.ProcessStateRunning),
 				})

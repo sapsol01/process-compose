@@ -161,7 +161,7 @@ func init() {
 	}
 }
 
-func logFatal(err error, format string, args ...interface{}) {
+func logFatal(err error, format string, args ...any) {
 	fmt.Printf(format, args...)
 	fmt.Printf(": %v\n", err)
 	log.Fatal().Err(err).Msgf(format, args...)

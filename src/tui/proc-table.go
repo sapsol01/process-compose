@@ -60,6 +60,9 @@ func (pv *pcView) fillTableData() {
 		s := &states.States[i]
 		if pv.isInteractive(s.Name) {
 			ptyFile := pv.project.GetProcessPty(s.Name)
+			// Drain the PTY regardless of which pane is focused, otherwise an
+			// unfocused interactive process blocks once its buffer fills (#508).
+			pv.termView.EnsureDraining(ptyFile)
 			if t := pv.termView.GetLastActivityTime(ptyFile); !t.IsZero() {
 				s.LastActivityTime = &t
 			}
@@ -440,7 +443,7 @@ func (pv *pcView) getIconForState(state types.ProcessState) (string, tcell.Color
 		types.ProcessStateScheduled:
 		return "●", pv.styles.ProcTable().FgPending.Color()
 	case types.ProcessStateCompleted:
-		if state.ExitCode == 0 {
+		if state.IsExitCodeSuccess() {
 			return "●", pv.styles.ProcTable().FgCompleted.Color()
 		}
 		return "✘", pv.styles.ProcTable().FgError.Color()

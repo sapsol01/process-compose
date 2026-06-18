@@ -1,0 +1,21 @@
+version: "0.5"
+
+processes:
+  base:
+    command: "echo base"
+    working_dir: "/tmp"
+    environment:
+      - "FOO=bar"
+      - "SHARED=base"
+    availability:
+      restart: "always"
+
+  derived:
+    extends: "base"
+    environment:
+      - "FOO=override"
+      - "EXTRA=2"
+
+  chain_top:
+    extends: "derived"
+    command: "echo top"

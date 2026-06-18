@@ -6,7 +6,7 @@ log_length: 3000
 is_strict: true
 #is_tui_disabled: true
 environment:
-  - 'ABC=222'
+  - "ABC=222"
 log_location: ./pc.log
 disable_env_expansion: false
 shell:
@@ -44,7 +44,7 @@ processes:
       # process4:
       #   condition: process_completed_successfully
     environment:
-      - 'EXIT_CODE=0'
+      - "EXIT_CODE=0"
     shutdown:
       command: "sleep 2 && pkill -f process1"
       signal: 15
@@ -57,7 +57,7 @@ processes:
   dep-on-log-line-ready:
     command: "echo log is $ENV_TEST"
     environment:
-      - 'ENV_TEST=ready'
+      - "ENV_TEST=ready"
     availability:
       restart: "on_failure"
       backoff_seconds: 2
@@ -84,9 +84,9 @@ processes:
     #   process3:
     #     condition: process_completed_successfully
     environment:
-      - 'ABC=2221'
-      - 'PRINT_ERR=111'
-      - 'EXIT_CODE=2'
+      - "ABC=2221"
+      - "PRINT_ERR=111"
+      - "EXIT_CODE=2"
     shutdown:
       command: "sleep 2 && pkill -f 'test_loop.bash process2'"
       signal: 15
@@ -119,8 +119,8 @@ processes:
     # availability:
     #   restart: on_failure
     environment:
-      - 'ABC=2221'
-      - 'EXIT_CODE=4'
+      - "ABC=2221"
+      - "EXIT_CODE=4"
     readiness_probe:
       exec:
         command: "ps -ef | grep -v grep | grep process4"
@@ -168,8 +168,8 @@ processes:
     command: "tail -f -n100 process-compose-${USER}.log"
     working_dir: "/tmp"
     environment:
-      - 'REDACTED=1'
-      - 'ADDED=2'
+      - "REDACTED=1"
+      - "ADDED=2"
     depends_on:
       process0:
         condition: process_completed
@@ -183,7 +183,7 @@ processes:
       LOCATION: USA
       FTR_A_ENABLED: true
       FTR_B_ENABLED: true
-    command: "echo 'Hi {{or .HI 123 }} from {{.LOCATION}} version {{or \"${VERSION}\" .VERSION}} {{if and .FTR_A_ENABLED .FTR_B_ENABLED}}Not Supported{{end}}'"
+    command: 'echo ''Hi {{or .HI 123 }} from {{.LOCATION}} version {{or "${VERSION}" .VERSION}} {{if and .FTR_A_ENABLED .FTR_B_ENABLED}}Not Supported{{end}}'''
     working_dir: "{{ .PWD }}"
 
   entrypoint:
@@ -231,11 +231,13 @@ processes:
   my-vim:
     command: vim process-compose.override.yaml
     is_interactive: true
+    shutdown:
+      send_keys: ":q\r"
 
   test-cron:
     command: "echo Cron triggered at $(date)"
     schedule:
-      cron: "*/1 * * * *"  # Every minute for testing
+      cron: "*/1 * * * *" # Every minute for testing
 
   test-interval:
     command: "echo 'Interval triggered' && sleep 5"
@@ -248,15 +250,34 @@ processes:
     command: "sleep 30"
     schedule:
       interval: "10s"
-      max_concurrent: 1  # Should skip runs while previous is still running
+      max_concurrent: 1 # Should skip runs while previous is still running
 
   monitor-test:
     command: "sleep 10 && echo 'Activity' && sleep 10 && echo 'Activity'"
     monitor_for: "activity"
-    
+
   claude:
     command: "claude -r"
     is_interactive: true
     monitor_for: "silence"
     monitor_silence_threshold: 5s
     disabled: true
+
+  base:
+    command: "echo 'base process' env: $$ORIGIN $$NUM"
+    environment:
+      - "ORIGIN=base"
+      - "NUM=42"
+
+  derived:
+    extends: base
+    command: "echo 'derived process' env: $$ORIGIN $$NUM $$LIVE"
+    environment:
+      - "LIVE=LONG_AND_PROSPER"
+
+  graceful-shutdown:
+    description: "exits 130 (128+SIGINT) on stop; allowlisted -> Completed"
+    command: "trap 'exit 130' INT; sleep 600"
+    success_exit_codes: [130] # 128 + SIGINT(2)
+    shutdown:
+      signal: 2 # send SIGINT instead of SIGTERM

@@ -173,6 +173,9 @@
         },
         "timeout": {
           "type": "string"
+        },
+        "expose_control_tools": {
+          "type": "boolean"
         }
       },
       "type": "object"
@@ -206,6 +209,9 @@
     "ProcessConfig": {
       "properties": {
         "name": {
+          "type": "string"
+        },
+        "extends": {
           "type": "string"
         },
         "disabled": {
@@ -332,6 +338,12 @@
         },
         "monitor_silence_threshold": {
           "type": "integer"
+        },
+        "success_exit_codes": {
+          "items": {
+            "type": "integer"
+          },
+          "type": "array"
         }
       },
       "type": "object"
@@ -517,6 +529,9 @@
         },
         "parent_only": {
           "type": "boolean"
+        },
+        "send_keys": {
+          "type": "string"
         }
       },
       "type": "object"

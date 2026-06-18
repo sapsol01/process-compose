@@ -1,5 +1,25 @@
 # Release Notes
 
+## [v1.116.0] - 2026-06-16
+
+### New Features
+
+- Added a [`process-compose process send-keys`](https://f1bonacc1.github.io/process-compose/cli/process-compose_process_send-keys/) command to inject keystrokes into a running [interactive process's](https://f1bonacc1.github.io/process-compose/interactive-processes/#sending-keys-programmatically) stdin, plus a [`shutdown.send_keys`](https://f1bonacc1.github.io/process-compose/launcher/#stopping-interactive-processes-with-keystrokes) option to cleanly stop programs that only quit on a keypress, addresses issue #507.
+- Added per-process [`success_exit_codes`](https://f1bonacc1.github.io/process-compose/launcher/#successful-exit-codes) to treat selected non-zero exit codes (e.g. `130` from a signal-driven shutdown) as a success, addresses issue #506.
+- Added process-level [`extends`](https://f1bonacc1.github.io/process-compose/merge/#process-inheritance-with-extends) so a process can inherit and override the configuration of another process in the same project.
+- Added automatic [replica name expansion in `depends_on`](https://f1bonacc1.github.io/process-compose/launcher/#multiple-replicas-of-a-process), letting processes depend on a replicated group or on a specific replica, addresses issue #496, by Pablo Castellazzi.
+- Added a `PC_NAMESPACES` environment variable as an alternative to `--namespace`/`-n` for selecting which [namespaces](https://f1bonacc1.github.io/process-compose/configuration/#namespaces) to run, addresses issue #491, by David Danier.
+- Added the [`pc_process_logs_search` (BM25 log search) and `pc_project_dependency_graph`](https://f1bonacc1.github.io/process-compose/mcp-server/#built-in-control-tools) built-in MCP control tools, by Jean-Luc Thumm.
+
+### Bug Fixes
+
+- Fixed unfocused interactive processes blocking on a full PTY buffer by ensuring background drainage, addresses issue #508.
+- Fixed a readiness cascade where dependents of an updated or restarted process could spuriously fail on a stale, cancelled process object, by Bo He.
+- Fixed a deadlock that wedged the logs WebSocket for an entire process under backpressure, by Bo He.
+- Fixed reloading a project that uses file-level `extends`, which previously failed with an "already specified in files to load" error after the first successful load, by Eike Haß.
+
+---
+
 ## [v1.110.0] - 2026-05-01
 
 ### New Features

@@ -47,6 +47,12 @@ func Load(opts *LoaderOptions) (*types.Project, error) {
 	if err != nil {
 		return nil, err
 	}
+	// Resolve process-level `extends` before defaults, replica expansion, and
+	// templating so derived processes inherit raw user config and each replica
+	// is cloned from the fully merged process.
+	if err = resolveProcessExtends(mergedProject); err != nil {
+		return nil, err
+	}
 	// Record the original user-supplied file list, not opts.FileNames —
 	// loadExtendProject mutates opts.FileNames in place when it resolves an
 	// `extends:` directive. Persisting the mutated slice onto the long-lived

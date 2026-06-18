@@ -11,7 +11,7 @@ import (
 
 // SubstituteArguments replaces @{arg} and @{arg:default} patterns with actual values
 // Returns the modified command string
-func SubstituteArguments(input string, args map[string]interface{}, argDefs []types.MCPArgument) (string, error) {
+func SubstituteArguments(input string, args map[string]any, argDefs []types.MCPArgument) (string, error) {
 	// Build argument definition lookup
 	argDefLookup := make(map[string]types.MCPArgument)
 	for _, def := range argDefs {
@@ -106,7 +106,7 @@ func SubstituteArguments(input string, args map[string]interface{}, argDefs []ty
 }
 
 // SubstituteProcessConfig creates a copy of the process config with substituted arguments
-func SubstituteProcessConfig(proc *types.ProcessConfig, args map[string]interface{}) (*types.ProcessConfig, error) {
+func SubstituteProcessConfig(proc *types.ProcessConfig, args map[string]any) (*types.ProcessConfig, error) {
 	if proc.MCP == nil || !proc.MCP.IsTool() {
 		return proc, nil
 	}
@@ -144,7 +144,7 @@ func SubstituteProcessConfig(proc *types.ProcessConfig, args map[string]interfac
 // formatArgValue formats a value based on its type for shell command substitution
 // Strings are always double-quoted with proper escaping
 // Numbers and booleans are unquoted
-func formatArgValue(value interface{}, argType types.MCPArgumentType) (string, error) {
+func formatArgValue(value any, argType types.MCPArgumentType) (string, error) {
 	switch argType {
 	case types.MCPArgTypeString:
 		str, ok := value.(string)

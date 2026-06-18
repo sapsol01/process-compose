@@ -54,7 +54,7 @@ func printState(state *types.ProjectState) {
 		printStateLine("GC Cycles", strconv.Itoa(int(state.MemoryState.GcCycles)), longestKey, green)
 	}
 }
-func printStateLine(key, value string, longestKey int, green func(a ...interface{}) string) {
+func printStateLine(key, value string, longestKey int, green func(a ...any) string) {
 	dotPads := longestKey - len(key)
 	padding := strings.Repeat(" ", dotPads)
 

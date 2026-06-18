@@ -10,7 +10,7 @@ func TestSubstituteArguments(t *testing.T) {
 	tests := []struct {
 		name    string
 		input   string
-		args    map[string]interface{}
+		args    map[string]any
 		argDefs []types.MCPArgument
 		want    string
 		wantErr bool
@@ -18,7 +18,7 @@ func TestSubstituteArguments(t *testing.T) {
 		{
 			name:    "simple string substitution",
 			input:   "grep @{pattern} file.txt",
-			args:    map[string]interface{}{"pattern": "error"},
+			args:    map[string]any{"pattern": "error"},
 			argDefs: []types.MCPArgument{{Name: "pattern", Type: types.MCPArgTypeString}},
 			want:    `grep "error" file.txt`,
 			wantErr: false,
@@ -26,7 +26,7 @@ func TestSubstituteArguments(t *testing.T) {
 		{
 			name:    "integer unquoted",
 			input:   "head -n @{count}",
-			args:    map[string]interface{}{"count": 50},
+			args:    map[string]any{"count": 50},
 			argDefs: []types.MCPArgument{{Name: "count", Type: types.MCPArgTypeInteger}},
 			want:    "head -n 50",
 			wantErr: false,
@@ -34,7 +34,7 @@ func TestSubstituteArguments(t *testing.T) {
 		{
 			name:    "default value used",
 			input:   "head -n @{limit:100}",
-			args:    map[string]interface{}{},
+			args:    map[string]any{},
 			argDefs: []types.MCPArgument{{Name: "limit", Type: types.MCPArgTypeInteger, Default: "100"}},
 			want:    "head -n 100",
 			wantErr: false,
@@ -42,7 +42,7 @@ func TestSubstituteArguments(t *testing.T) {
 		{
 			name:    "default value from pattern",
 			input:   "head -n @{limit:50}",
-			args:    map[string]interface{}{},
+			args:    map[string]any{},
 			argDefs: []types.MCPArgument{{Name: "limit", Type: types.MCPArgTypeInteger}},
 			want:    "head -n 50",
 			wantErr: false,
@@ -50,7 +50,7 @@ func TestSubstituteArguments(t *testing.T) {
 		{
 			name:    "default value overridden",
 			input:   "head -n @{limit:100}",
-			args:    map[string]interface{}{"limit": 25},
+			args:    map[string]any{"limit": 25},
 			argDefs: []types.MCPArgument{{Name: "limit", Type: types.MCPArgTypeInteger}},
 			want:    "head -n 25",
 			wantErr: false,
@@ -58,7 +58,7 @@ func TestSubstituteArguments(t *testing.T) {
 		{
 			name:    "escaped pattern",
 			input:   `echo "Use \@{pattern} syntax"`,
-			args:    map[string]interface{}{"pattern": "test"},
+			args:    map[string]any{"pattern": "test"},
 			argDefs: []types.MCPArgument{{Name: "pattern", Type: types.MCPArgTypeString}},
 			want:    `echo "Use @{pattern} syntax"`,
 			wantErr: false,
@@ -66,7 +66,7 @@ func TestSubstituteArguments(t *testing.T) {
 		{
 			name:    "string with quotes escaped",
 			input:   "echo @{message}",
-			args:    map[string]interface{}{"message": `say "hello"`},
+			args:    map[string]any{"message": `say "hello"`},
 			argDefs: []types.MCPArgument{{Name: "message", Type: types.MCPArgTypeString}},
 			want:    `echo "say \"hello\""`,
 			wantErr: false,
@@ -74,7 +74,7 @@ func TestSubstituteArguments(t *testing.T) {
 		{
 			name:  "multiple arguments",
 			input: "grep @{pattern} @{filename} | head -n @{limit:100}",
-			args:  map[string]interface{}{"pattern": "error", "filename": "/var/log/app.log"},
+			args:  map[string]any{"pattern": "error", "filename": "/var/log/app.log"},
 			argDefs: []types.MCPArgument{
 				{Name: "pattern", Type: types.MCPArgTypeString},
 				{Name: "filename", Type: types.MCPArgTypeString},
@@ -86,7 +86,7 @@ func TestSubstituteArguments(t *testing.T) {
 		{
 			name:    "optional arg not provided",
 			input:   "echo @{optional} done",
-			args:    map[string]interface{}{},
+			args:    map[string]any{},
 			argDefs: []types.MCPArgument{{Name: "optional", Type: types.MCPArgTypeString, Required: false}},
 			want:    "echo  done",
 			wantErr: false,
@@ -94,7 +94,7 @@ func TestSubstituteArguments(t *testing.T) {
 		{
 			name:    "boolean value",
 			input:   "if @{verbose}; then echo 'verbose'; fi",
-			args:    map[string]interface{}{"verbose": true},
+			args:    map[string]any{"verbose": true},
 			argDefs: []types.MCPArgument{{Name: "verbose", Type: types.MCPArgTypeBoolean}},
 			want:    "if true; then echo 'verbose'; fi",
 			wantErr: false,
@@ -102,7 +102,7 @@ func TestSubstituteArguments(t *testing.T) {
 		{
 			name:    "number value",
 			input:   "sleep @{duration}",
-			args:    map[string]interface{}{"duration": 3.5},
+			args:    map[string]any{"duration": 3.5},
 			argDefs: []types.MCPArgument{{Name: "duration", Type: types.MCPArgTypeNumber}},
 			want:    "sleep 3.5",
 			wantErr: false,
@@ -175,7 +175,7 @@ func TestSubstituteProcessConfig(t *testing.T) {
 	tests := []struct {
 		name     string
 		proc     *types.ProcessConfig
-		args     map[string]interface{}
+		args     map[string]any
 		wantCmd  string
 		wantArgs []string
 		wantErr  bool
@@ -192,7 +192,7 @@ func TestSubstituteProcessConfig(t *testing.T) {
 					},
 				},
 			},
-			args:    map[string]interface{}{"pattern": "error"},
+			args:    map[string]any{"pattern": "error"},
 			wantCmd: `grep "error" file.txt`,
 			wantErr: false,
 		},
@@ -208,7 +208,7 @@ func TestSubstituteProcessConfig(t *testing.T) {
 					},
 				},
 			},
-			args:     map[string]interface{}{"pattern": "error"},
+			args:     map[string]any{"pattern": "error"},
 			wantCmd:  "",
 			wantArgs: []string{`grep`, `"error"`, `file.txt`},
 			wantErr:  false,
@@ -228,7 +228,7 @@ func TestSubstituteProcessConfig(t *testing.T) {
 					},
 				},
 			},
-			args:     map[string]interface{}{"cmd": "echo", "arg1": "hello", "arg2": 42},
+			args:     map[string]any{"cmd": "echo", "arg1": "hello", "arg2": 42},
 			wantCmd:  `"echo"`,
 			wantArgs: []string{`"hello"`, `42`},
 			wantErr:  false,
@@ -239,7 +239,7 @@ func TestSubstituteProcessConfig(t *testing.T) {
 				Name:    "test",
 				Command: "echo hello",
 			},
-			args:    map[string]interface{}{},
+			args:    map[string]any{},
 			wantCmd: "echo hello",
 			wantErr: false,
 		},
@@ -252,7 +252,7 @@ func TestSubstituteProcessConfig(t *testing.T) {
 					Type: types.MCPProcessTypeResource,
 				},
 			},
-			args:    map[string]interface{}{},
+			args:    map[string]any{},
 			wantCmd: "cat file.txt",
 			wantErr: false,
 		},

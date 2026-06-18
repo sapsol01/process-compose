@@ -291,7 +291,7 @@ func (p *ProjectRunner) waitIfNeeded(process *types.ProcessConfig) error {
 			case types.ProcessConditionCompletedSuccessfully:
 				log.Info().Msgf("%s is waiting for %s to complete successfully", process.ReplicaName, k)
 				exitCode := proc.waitForCompletion()
-				if exitCode != 0 {
+				if !proc.procConf.IsExitCodeSuccess(exitCode) {
 					return fmt.Errorf("process %s depended on %s to complete successfully, but it exited with status %d",
 						process.ReplicaName, k, exitCode)
 				}
@@ -323,10 +323,17 @@ func (p *ProjectRunner) waitIfNeeded(process *types.ProcessConfig) error {
 }
 
 func (p *ProjectRunner) onProcessEnd(exitCode int, procConf *types.ProcessConfig) {
-	if (exitCode != 0 && procConf.RestartPolicy.Restart == types.RestartPolicyExitOnFailure) ||
+	success := procConf.IsExitCodeSuccess(exitCode)
+	if (!success && procConf.RestartPolicy.Restart == types.RestartPolicyExitOnFailure) ||
 		procConf.RestartPolicy.ExitOnEnd {
+		// A success_exit_codes match is equivalent to a clean exit, so the
+		// project should not inherit the raw non-zero code (e.g. on exit_on_end).
+		code := exitCode
+		if success {
+			code = 0
+		}
 		p.exitCodeMutex.Lock()
-		p.exitCode = exitCode
+		p.exitCode = code
 		p.exitCodeMutex.Unlock()
 		log.Info().Msgf("Process %s exited with code %d. Shutting down project...", procConf.Name, exitCode)
 		_ = p.ShutDownProject()
@@ -1107,7 +1114,7 @@ func (p *ProjectRunner) getCurrentReplicaCount(name string) int {
 }
 
 func (p *ProjectRunner) scaleUpProcess(proc types.ProcessConfig, toAdd, scale, origScale int) {
-	for i := 0; i < toAdd; i++ {
+	for i := range toAdd {
 		var procFromConf types.ProcessConfig
 		err := json.Unmarshal([]byte(proc.OriginalConfig), &procFromConf)
 		if err != nil {
@@ -1269,13 +1276,7 @@ func (p *ProjectRunner) selectRunningProcessesNoDeps(procList []string) error {
 		return nil
 	}
 	for name, proc := range p.project.Processes {
-		found := false
-		for _, procName := range procList {
-			if proc.Name == procName {
-				found = true
-				break
-			}
-		}
+		found := slices.Contains(procList, proc.Name)
 		if !found {
 			proc.Disabled = true
 		} else {
@@ -1533,6 +1534,18 @@ func (p *ProjectRunner) GetProcessPty(name string) *os.File {
 		return nil
 	}
 	return proc.GetPty()
+}
+
+// SendProcessKeys writes the given keys to a running interactive process's stdin.
+func (p *ProjectRunner) SendProcessKeys(name string, keys string) error {
+	proc := p.getRunningProcess(name)
+	if proc == nil {
+		if _, ok := p.project.Processes[name]; !ok {
+			return fmt.Errorf("process %s does not exist", name)
+		}
+		return fmt.Errorf("process %s is not running", name)
+	}
+	return proc.sendKeys(keys)
 }
 
 func (p *ProjectRunner) GetFullProcessEnvironment(proc *types.ProcessConfig) []string {

@@ -109,7 +109,7 @@ func (api *PcApi) parseStateNameFilter(raw string) map[string]struct{} {
 		}
 	}
 	filter := make(map[string]struct{})
-	for _, name := range strings.Split(raw, ",") {
+	for name := range strings.SplitSeq(raw, ",") {
 		name = strings.TrimSpace(name)
 		if name == "" {
 			continue
