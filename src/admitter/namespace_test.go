@@ -25,7 +25,7 @@ func TestNamespaceAdmitter_Admit(t *testing.T) {
 			},
 			args: args{
 				proc: &types.ProcessConfig{
-					Namespace: "",
+					Namespace: nil,
 				},
 			},
 			want: true,
@@ -37,7 +37,7 @@ func TestNamespaceAdmitter_Admit(t *testing.T) {
 			},
 			args: args{
 				proc: &types.ProcessConfig{
-					Namespace: "",
+					Namespace: nil,
 				},
 			},
 			want: true,
@@ -49,7 +49,7 @@ func TestNamespaceAdmitter_Admit(t *testing.T) {
 			},
 			args: args{
 				proc: &types.ProcessConfig{
-					Namespace: "not-test",
+					Namespace: types.Namespaces{"not-test"},
 				},
 			},
 			want: false,
@@ -61,7 +61,7 @@ func TestNamespaceAdmitter_Admit(t *testing.T) {
 			},
 			args: args{
 				proc: &types.ProcessConfig{
-					Namespace: "test",
+					Namespace: types.Namespaces{"test"},
 				},
 			},
 			want: true,
@@ -73,7 +73,43 @@ func TestNamespaceAdmitter_Admit(t *testing.T) {
 			},
 			args: args{
 				proc: &types.ProcessConfig{
-					Namespace: "test",
+					Namespace: types.Namespaces{"test"},
+				},
+			},
+			want: true,
+		},
+		{
+			name: "process in multiple namespaces - one matches",
+			fields: fields{
+				EnabledNamespaces: []string{"test"},
+			},
+			args: args{
+				proc: &types.ProcessConfig{
+					Namespace: types.Namespaces{"not-test", "test"},
+				},
+			},
+			want: true,
+		},
+		{
+			name: "process in multiple namespaces - none matches",
+			fields: fields{
+				EnabledNamespaces: []string{"test"},
+			},
+			args: args{
+				proc: &types.ProcessConfig{
+					Namespace: types.Namespaces{"not-test", "also-not-test"},
+				},
+			},
+			want: false,
+		},
+		{
+			name: "no namespace admitted by default",
+			fields: fields{
+				EnabledNamespaces: []string{types.DefaultNamespace},
+			},
+			args: args{
+				proc: &types.ProcessConfig{
+					Namespace: nil,
 				},
 			},
 			want: true,
@@ -88,5 +124,46 @@ func TestNamespaceAdmitter_Admit(t *testing.T) {
 				t.Errorf("Admit() = %v, want %v", got, tt.want)
 			}
 		})
+	}
+}
+
+func TestApplyToProject(t *testing.T) {
+	project := &types.Project{
+		Processes: types.Processes{
+			"p1": {Name: "p1", ReplicaName: "p1", Namespace: types.Namespaces{"ns1"},
+				DependsOn: types.DependsOnConfig{"p2": {}, "p3": {}}},
+			"p2": {Name: "p2", ReplicaName: "p2", Namespace: types.Namespaces{"ns2"}},
+			"p3": {Name: "p3", ReplicaName: "p3", Namespace: types.Namespaces{"ns1"}},
+		},
+	}
+	ApplyToProject(project, []Admitter{&NamespaceAdmitter{EnabledNamespaces: []string{"ns1"}}})
+
+	if _, ok := project.Processes["p2"]; ok {
+		t.Error("excluded process should be removed from the project")
+	}
+	p1 := project.Processes["p1"]
+	if _, ok := p1.DependsOn["p2"]; ok {
+		t.Error("dependency on the excluded process should be pruned")
+	}
+	if _, ok := p1.DependsOn["p3"]; !ok {
+		t.Error("dependency on an admitted process should be kept")
+	}
+}
+
+func TestApplyToProject_NoAdmittersKeepsProjectIntact(t *testing.T) {
+	project := &types.Project{
+		Processes: types.Processes{
+			"p1": {Name: "p1", ReplicaName: "p1", Namespace: types.Namespaces{"ns1"},
+				DependsOn: types.DependsOnConfig{"p2": {}}},
+			"p2": {Name: "p2", ReplicaName: "p2", Namespace: types.Namespaces{"ns2"}},
+		},
+	}
+	ApplyToProject(project, nil)
+
+	if len(project.Processes) != 2 {
+		t.Errorf("without admitters no process should be removed, got %d", len(project.Processes))
+	}
+	if _, ok := project.Processes["p1"].DependsOn["p2"]; !ok {
+		t.Error("without admitters no dependency should be pruned")
 	}
 }

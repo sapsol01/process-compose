@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/drone/envsubst"
+	"github.com/f1bonacc1/process-compose/src/admitter"
 	"github.com/f1bonacc1/process-compose/src/config"
 	"github.com/f1bonacc1/process-compose/src/types"
 	"github.com/joho/godotenv"
@@ -76,6 +77,7 @@ func Load(opts *LoaderOptions) (*types.Project, error) {
 		assignDefaultProcessValues,
 		cloneReplicas,
 		copyWorkingDirToProbes,
+		resolveWatchPaths,
 		convertStrDisabledToBool,
 		disableProcsInEnv,
 	)
@@ -100,6 +102,7 @@ func Load(opts *LoaderOptions) (*types.Project, error) {
 		validateDependencyIsEnabled,
 		validateNoIncompatibleHealthChecks,
 		validateScheduledProcessScaling,
+		validateWatchConfig,
 		validateMCPConfig,
 		validateProject,
 	)
@@ -133,17 +136,7 @@ func loadExtendProject(p *types.Project, opts *LoaderOptions, file string, index
 }
 
 func admitProcesses(opts *LoaderOptions, p *types.Project) *types.Project {
-	if opts.admitters == nil {
-		return p
-	}
-	for _, process := range p.Processes {
-		for _, adm := range opts.admitters {
-			if !adm.Admit(&process) {
-				log.Info().Msgf("Process %s was removed due to admission policy", process.ReplicaName)
-				delete(p.Processes, process.ReplicaName)
-			}
-		}
-	}
+	admitter.ApplyToProject(p, opts.admitters)
 	return p
 }
 

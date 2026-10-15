@@ -40,7 +40,9 @@ func getProjectRunner(process []string, noDeps bool, mainProcess string, mainPro
 			WithNoDeps(noDeps).
 			WithLogTruncate(*pcFlags.LogsTruncate).
 			WithSlowRefRate(*pcFlags.SlowRefreshRate).
-			WithRecursiveMetrics(*pcFlags.WithRecursiveMetrics),
+			WithRecursiveMetrics(*pcFlags.WithRecursiveMetrics).
+			WithNoWatch(*pcFlags.NoWatch).
+			WithAdmitters(opts.GetAdmitters()...),
 	)
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to initialize the project")

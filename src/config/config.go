@@ -6,7 +6,6 @@ import (
 	"os/user"
 	"path/filepath"
 	"runtime/debug"
-	"slices"
 	"strconv"
 	"strings"
 
@@ -84,24 +83,21 @@ const (
 )
 
 var (
-	clientCommands = []string{
-		"down",
-		"attach",
-		"process",
-		"project",
-		"list",
-		"ls",
-		"namespace",
-		"ns",
-		"--detached-with-tui",
-	}
-)
-
-var (
 	CliApiTokenPath string
 )
 
 func GetLogFilePath() string {
+	return logFilePath("")
+}
+
+// GetClientLogFilePath returns the log file path for client-mode invocations
+// (e.g. down, attach), kept separate so they don't truncate the log of a
+// running server.
+func GetClientLogFilePath() string {
+	return logFilePath("-client")
+}
+
+func logFilePath(suffix string) string {
 	val, found := os.LookupEnv(LogPathEnvVarName)
 	if found {
 		return val
@@ -110,7 +106,7 @@ func GetLogFilePath() string {
 	if len(userName) != 0 {
 		userName = "-" + userName
 	}
-	return filepath.Join(os.TempDir(), fmt.Sprintf("process-compose%s%s.log", userName, mode()))
+	return filepath.Join(os.TempDir(), fmt.Sprintf("process-compose%s%s.log", userName, suffix))
 }
 
 func GetLogLevel() zerolog.Level {
@@ -320,22 +316,6 @@ func getUser() string {
 	return username
 }
 
-func mode() string {
-	if isClient() {
-		return "-client"
-	}
-	return ""
-}
-
-func isClient() bool {
-	for _, proc := range os.Args {
-		if slices.Contains(clientCommands, proc) {
-			return true
-		}
-	}
-	return false
-}
-
 func IsLogSelectionOn() bool {
 	return true
 }
@@ -375,5 +355,10 @@ func getWithRecursiveMetricsEnvDefault() bool {
 
 func getLogNoColorDefault() bool {
 	_, found := os.LookupEnv(EnvVarLogNoColor)
+	return found
+}
+
+func getNoWatchEnvDefault() bool {
+	_, found := os.LookupEnv(EnvVarNoWatch)
 	return found
 }

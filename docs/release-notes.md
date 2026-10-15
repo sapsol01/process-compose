@@ -1,5 +1,45 @@
 # Release Notes
 
+## [v1.122.0] - 2026-08-18
+
+### New Features
+
+- Added [file watching](https://f1bonacc1.github.io/process-compose/watch/): a per-process `watch` block restarts a process when its files change, with include/exclude globs, a configurable `debounce`, and `cascade: true` to restart the process's dependents transitively (in dependency order, so a rebuilt artifact is ready before its consumers restart). A process that has exited while its watch is still armed reports the new `Watching` state, and the TUI names the file that caused each restart. Watch-triggered restarts skip the restart backoff and reset the restart counter, since they are user intent rather than a crash loop. File watching can be turned off entirely with `--no-watch` / `PC_NO_WATCH`.
+- Added support for [multiple namespaces per process](https://f1bonacc1.github.io/process-compose/configuration/#multiple-namespaces): `namespace` now accepts either a single string or a list of strings (similar to docker-compose profiles), so a shared process (e.g. a database) can be selected and operated as part of any of its namespaces, addresses issue #519.
+
+### Bug Fixes
+
+- Fixed restarting a process shutting the whole project down when that process was configured with `availability.exit_on_end` or `restart: exit_on_failure`. Every exit routed through the same path, and a restarted process does not exit cleanly (a `SIGTERM`ed process reports a non-zero code), so an intentional restart was indistinguishable from the process ending. This affected manual restarts from the TUI, the CLI and the API; it is also what would have made every watch-triggered restart end the project.
+- Fixed [namespace operations](https://f1bonacc1.github.io/process-compose/configuration/#namespace-operations) skipping processes that were not started: `process-compose namespace start <ns>` now starts every configured member of the namespace, including processes excluded from an `up <process>...` selection or marked `disabled: true`, instead of failing with "namespace not found (no processes assigned)", addresses issue #528.
+- Fixed a [project update or reload](https://f1bonacc1.github.io/process-compose/configuration/#project-edit) starting the processes that were excluded from a `process-compose up <process>...` selection: the selection is now re-applied to the reloaded configuration, the same way the `--namespace` admission policies already were.
+- Fixed a project or process update shutting the project down when it restarted the only running process: the momentary gap while the process is stopped is no longer mistaken for the project having completed.
+- Fixed stopping or restarting a process while it is still waiting on its [dependencies](https://f1bonacc1.github.io/process-compose/launcher/#define-process-dependencies): the process was left wedged in `Terminating` and its still-waiting instance later started an untracked copy, which `stop`, `start` and `restart` could not manage, which a subsequent `start` duplicated, and which survived `down` as an orphan. A pending process now stops immediately instead of waiting for its dependencies to resolve, and a superseded instance can no longer deregister its replacement, addresses issue #530.
+- Fixed the TUI **Namespace Operations** modal silently ignoring failures: a failed namespace start, stop or restart is now reported in an error dialog instead of only being written to the log file.
+- Fixed the HTTP API rejecting process names that contain slashes: routes are now matched against the raw percent-encoded path and the client encodes process names as path segments, addresses issue #523.
+- Client-mode commands (`down`, `attach`, `list`, `process`, `project`, `namespace`) now write their internal logs to a [separate log file](https://f1bonacc1.github.io/process-compose/logging/#client-commands-and-pc_log_file) (`/tmp/process-compose-$USER-client.log` by default) instead of truncating the log file of a running server, documentation by @soy-chrislo.
+
+---
+
+## [v1.120.0] - 2026-07-11
+
+### New Features
+
+- Added [Solarized Dark and Solarized Light](https://f1bonacc1.github.io/process-compose/tui/#tui-themes) TUI themes, by Danial Pearce.
+- Added pruning of cross-namespace dependencies: when running a subset of [namespaces](https://f1bonacc1.github.io/process-compose/configuration/#namespaces), a `depends_on` reference to a process from an unselected namespace is dropped (with a warning) so the selected processes can start, and the namespace selection now persists across project updates and reloads instead of resurrecting excluded processes, addresses issue #517.
+- Added debug logging of the exec probe command during health checks - once when probing starts and on probe failures, addresses issue #454.
+- Added a notice when requesting CLI logs for an [interactive process](https://f1bonacc1.github.io/process-compose/interactive-processes/#attaching-to-a-process), whose PTY-rendered output is not captured in the log buffer, addresses issue #511.
+
+### Bug Fixes
+
+- Fixed the TUI log viewer mangling log lines containing bracketed text with punctuation or spaces, which was misinterpreted as tview region tags, addresses issue #515.
+- Fixed incorrect line wrapping of interactive process output by deferring terminal initialization until the TUI layout is settled and the pane size is known, addresses issue #512.
+
+### Security Fixes
+
+- Fixed a DNS-rebinding vulnerability (GHSA-5gm3-9crp-6g3v) in the [MCP SSE transport](https://f1bonacc1.github.io/process-compose/mcp-server/#sse-transport-security): the SSE listener now validates the `Host` and `Origin` headers (loopback plus optional `trusted_hosts`) and, when an API token is configured, enforces it via `X-PC-Token-Key` or `Authorization: Bearer` before dispatching any MCP request.
+
+---
+
 ## [v1.116.0] - 2026-06-16
 
 ### New Features
